@@ -43,6 +43,7 @@ class CachedObject( pyramid_caching_api.utils.CachedData ):
             api_results[id] = self.id_to_name( id , get_only=True )
         check_ids = [ i for i in api_results.keys() if ( api_results[i] in pyramid_caching_api.api.CACHE_FAILS ) ]
         if len(check_ids):
+            print "CachedObject.ids_to_names || A VERY EXPENSIVE FUNCTION || ids = %s" % check_ids
             db_results = dict( (i,sample_data[i]) if i in sample_data else (i,False) for i in check_ids )
             for id in db_results.keys():
                 name = db_results[id]
