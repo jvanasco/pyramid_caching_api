@@ -1,4 +1,8 @@
-pyramid_caching_api gives lightweight support for managing cached data.  It's designed to help you optimize cache access under certain situations.
+pyramid_caching_api gives lightweight support for managing cached data in dogpile.cache.
+
+It's designed to help you optimize cache access under certain situations.
+
+This is a work in progress.  Contributions are greatly appreciated.  A version of this strategy is used on a production site, but this is a total rewrite.
 
 Cached Info is generated from 3 places , in this priority :
 
