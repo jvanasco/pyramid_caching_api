@@ -26,7 +26,9 @@ class CachedObject( pyramid_caching_api.utils.CachedData ):
     def _id_to_name( self ):
         ( id , ) = self.query_args
         print "CachedObject._id_to_name || A VERY EXPENSIVE FUNCTION || id = %s" % id
-        return sample_data[id]
+        if id in sample_data :
+            return sample_data[id]
+        return pyramid_caching_api.api.NO_VALUE
 
     def id_to_name( self , id , get_only=False ):
         self.query_args = ( id , )
@@ -63,7 +65,7 @@ class AdvancedCachedObject( pyramid_caching_api.utils.CachedData ):
             store= object.copy()
             store['extra_data'] = "more stuff to be dropped into the cache"
             return pyramid_caching_api.utils.ObjectifiedDict(store)
-        return pyramid_caching_api.NO_VALUE
+        return pyramid_caching_api.api.NO_VALUE
         
     def _standardize_object_postcache( self , object ):
         if object:
@@ -73,7 +75,7 @@ class AdvancedCachedObject( pyramid_caching_api.utils.CachedData ):
                                     AdvancedCachedObject, 'get_by_id', (1,) ,
                                 )
             return object
-        return pyramid_caching_api.NO_VALUE
+        return pyramid_caching_api.api.NO_VALUE
 
     def _get_by_id( self ):
         ( id , ) = self.query_args
@@ -96,7 +98,7 @@ pyramid_config = {
     'cache.objects.backend' : 'dogpile.cache.dbm' ,
 }
 pyramid_settings = { 
-    'data_dir' : '/Users/jvanasco/webserver/os-projects-mine/pyramid_caching_api/data' ,
+    'data_dir' : 'data' ,
 }
 region_config = { 'objects':{} }
 
