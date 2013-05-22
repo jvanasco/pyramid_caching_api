@@ -33,18 +33,20 @@ class CachedData(object):
 
 class LazyloadedFunction(object):
     """ a deferred function """
-    def __init__(self, object , object_attribute, function , *args , **kwargs ):
+
+    def __init__(self, object , object_attribute, cache_function , *cache_function_args , **cache_function_kwargs ):
         self.object = object
         self.object_attribute = object_attribute
-        self.function = function
-        self.args = args
-        self.kwargs = kwargs
+        self.cache_function = cache_function
+        self.cache_function_args = cache_function_args
+        self.cache_function_kwargs = cache_function_kwargs
         try:
             self.__doc__ = function.__doc__
         except: # pragma: no cover
             pass
+
     def execute(self):
-        val = self.function(*self.args,**self.kwargs)
+        val = self.cache_function(*self.cache_function_args,**self.cache_function_kwargs)
         return val
 
 
@@ -63,11 +65,12 @@ class ObjectifiedDict(dict):
     def __getattr__(self,attr):
         if attr in self:
             if isinstance( self[attr] , LazyloadedFunction ):
-                self[attr] = self[attr].execute()
+                value = self[attr].execute()
+                self[attr] = value
             return self[attr]
         return self.__getattribute__(attr)
-
-
+        
+    
     def _lazyload( self, attr , function , *args , **kwargs ):
         self[attr] = LazyloadedFunction(self,attr,function,*args,**kwargs)
         

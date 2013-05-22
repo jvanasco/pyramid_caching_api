@@ -207,7 +207,7 @@ class CachingApi(object):
                     for argset in _rval.keys():
                         argset_pass = (check_argsets,)
                         key_single = apiObject.keys[method_name_single] % argset_pass
-                        rva[argset] = _rval[argset]
+                        rval[argset] = _rval[argset]
                         self.cached[region_name][key_single] = _rval[argset]
                 return rval
 
