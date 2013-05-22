@@ -54,5 +54,16 @@ the demo also shows an example of optimizing multiple selects to parallel from s
 
 # To Do
 
-1. The customized implementation of this strategy pairs the multiple-select functions with corresponding single-select functions.   this allows for local (request) cache data to address info first, and also allows for the multiple-select functions to populate the local cache.  this feature didn't make it into the current rewrite.
+1. The customized implementation of this strategy pairs the multiple-select functions with corresponding single-select functions.   this allows for local (request) cache data to address info first, and also allows for the multiple-select functions to populate the local cache.  this feature didn't make it into the current rewrite in a decent manner. the implementation is messy.
+
+	1. an object needs to have a `keyed_multiples` attribute to map the selection
+
+		keyed_multiples = {\
+			'ids_to_names' : 'id_to_name' ,
+		}
+
+	2. this only works for items that have a single argument
+
+
+
 

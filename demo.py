@@ -18,6 +18,10 @@ class CachedObject( pyramid_caching_api.utils.CachedData ):
         ## NOT cached
         'ids_to_names' : 'CachedObject:ids_to_names:%s' ,
     }
+    keyed_multiples = {\
+        'ids_to_names' : 'id_to_name' ,
+    }
+    
 
     def id_to_name__set( self , id , value ):
         key = self.keys['id_to_name'] % id
@@ -25,13 +29,14 @@ class CachedObject( pyramid_caching_api.utils.CachedData ):
 
     def _id_to_name( self ):
         ( id , ) = self.query_args
-        print "CachedObject._id_to_name || A VERY EXPENSIVE FUNCTION || id = %s" % id
+        print "CachedObject._id_to_name || EXPENSIVE FUNCTION || id = %s" % id
         if id in sample_data :
             return sample_data[id]
         return pyramid_caching_api.api.NO_VALUE
 
     def id_to_name( self , id , get_only=False ):
         self.query_args = ( id , )
+        print "CachedObject.id_to_name || INEXPENSIVE FUNCTION || id = %s" % id
         key = self.keys['id_to_name'] % id
         if get_only :
             return self.regions_manager.regions[self.region_name].get( key )
@@ -43,8 +48,8 @@ class CachedObject( pyramid_caching_api.utils.CachedData ):
             api_results[id] = self.id_to_name( id , get_only=True )
         check_ids = [ i for i in api_results.keys() if ( api_results[i] in pyramid_caching_api.api.CACHE_FAILS ) ]
         if len(check_ids):
-            print "CachedObject.ids_to_names || A VERY EXPENSIVE FUNCTION || ids = %s" % check_ids
-            db_results = dict( (i,sample_data[i]) if i in sample_data else (i,False) for i in check_ids )
+            print "CachedObject.ids_to_names || POTENTIALLY EXPENSIVE FUNCTION || ids = %s" % check_ids
+            db_results = dict( (i,sample_data[i]) if i in sample_data else (i,pyramid_caching_api.api.NO_VALUE) for i in check_ids )
             for id in db_results.keys():
                 name = db_results[id]
                 api_results[id] = name
@@ -110,12 +115,19 @@ regions_manager = pyramid_caching_api.api.CachingManager( pyramid_config , pyram
 r = FakeRequest()
 r.cachingApi = pyramid_caching_api.api.CachingApi( r , regions_manager=regions_manager , dbSessionReaderFetch=lambda: True )
 
+
 if True :
     # some sample gets
     print r.cachingApi.get(  CachedObject , 'id_to_name' , (1,) )
     print r.cachingApi.get(  CachedObject , 'id_to_name' , (2,) )
     print r.cachingApi.get(  CachedObject , 'id_to_name' , (100,) )
-    print r.cachingApi.get(  CachedObject , 'ids_to_names' , ((1,2,3,100,200,300),) )
+    print r.cachingApi.get(  CachedObject , 'ids_to_names' , ((1,2,3,5,6,100,200,300),) )
+
+    ## in case you want to see the internal stash created by the ids_to_names function
+    ##  you'll see that 'CachedObject:id_to_name:3' in 'objects' was created 
+    if True:
+        print r.cachingApi.__dict__
+
 
     # sample deletes
     for i in range(1,100):

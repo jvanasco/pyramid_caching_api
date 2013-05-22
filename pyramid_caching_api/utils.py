@@ -25,6 +25,7 @@ class CachedData(object):
     dbSession = None
     query_args = None
     regions_manager = None
+    keyed_multiples = None
 
 
 

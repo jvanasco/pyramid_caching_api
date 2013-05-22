@@ -1,13 +1,13 @@
 import logging
 log = logging.getLogger(__name__)
 
+import types
+from dogpile.cache import make_region
 
 from . import utils
 from .utils import CACHE_FAILS
-
 from .utils import NO_VALUE              # actually `dogpile.cache.api::NO_VALUE`
 
-from dogpile.cache import make_region
 
 class CachingManager(object):
     """CachingManager provides a base class to configure regions
@@ -138,6 +138,9 @@ class CachingApi(object):
     
     def _setup_apiObject(  self , apiObject ):
         """Sets up the apiObject for requesting"""
+        # exit early if we set it up already.
+        if apiObject.request is not None:
+            return
         apiObject.request = self.request
         apiObject.regions_manager = self.regions_manager
         if self.dbSessionWriterFetch and self.dbSessionReaderFetch :
@@ -176,12 +179,45 @@ class CachingApi(object):
         try:
             apiObject = cachedClass()
             region_name = apiObject.region_name
-            key = apiObject.keys[method_name] % argstuple
-            if key not in self.cached[region_name] or force :
+
+            ## this is really dirty and should be redone
+            keyed_multiples = getattr( apiObject , 'keyed_multiples' )
+            if keyed_multiples and method_name in keyed_multiples :
+                method_name_single = keyed_multiples[method_name]
+                rval = dict([(argset,NO_VALUE) for argset in argstuple[0]])
+                check_argsets = []
+                for argset in rval.keys() :
+                    argset_pass = argset
+                    if not isinstance( argset , types.TupleType ):
+                        argset_pass = ( argset , )
+                    key_single = apiObject.keys[method_name_single] % argset_pass
+                    if key_single not in self.cached[region_name] or force :
+                        self._setup_apiObject( apiObject )
+                        _rval = getattr( apiObject , method_name_single )( *argset_pass , get_only=True )
+                        if _rval == NO_VALUE :
+                            check_argsets.append( argset )
+                            continue
+                        rval[argset] = _rval
+                        self.cached[region_name][key_single] = rval[argset]
+                if check_argsets:
+                    argset_pass = (check_argsets,)
+                    key_multiple = apiObject.keys[method_name] % argset_pass
+                    self._setup_apiObject( apiObject )
+                    _rval = getattr( apiObject , method_name )( *argset_pass )
+                    for argset in _rval.keys():
+                        argset_pass = (check_argsets,)
+                        key_single = apiObject.keys[method_name_single] % argset_pass
+                        rva[argset] = _rval[argset]
+                        self.cached[region_name][key_single] = _rval[argset]
+                return rval
+
+            # else, the single select
+            key_single = apiObject.keys[method_name] % argstuple
+            if key_single not in self.cached[region_name] or force :
                 self._setup_apiObject( apiObject )
                 rval = getattr( apiObject , method_name )( *argstuple )
-                self.cached[region_name][key] = rval
-            return self.cached[region_name][key]
+                self.cached[region_name][key_single] = rval
+            return self.cached[region_name][key_single]
         except:
             raise
         
