@@ -6,18 +6,18 @@ This is a work in progress.  Contributions are greatly appreciated.  A version o
 
 Cached Info is generated from 3 places , in this priority :
 
-	1. The Request ( via an internal data store )
-	2. The Cloud ( via dogpile.cache )
-	3. The Database ( via a failover )
+1. The Request ( via an internal data store )
+2. The Cloud ( via dogpile.cache )
+3. The Database ( via a failover )
 
 It's important to note that this package is designed to optimize cache access and traffic.  This has little to do with the actual caching, and just offers a framework to better integrate well established caching libaries.
 
-	1. items stashed into a 'per request cache' do not have an expiry.  they sit there until the request is destroyed.  this is designed so that you don't query a cache server for the same object twice.
+1. items stashed into a 'per request cache' do not have an expiry.  they sit there until the request is destroyed.  this is designed so that you don't query a cache server for the same object twice.
 
-	2. a framework is provided to quickly write functions for pulling multiple keys at once in a two-pass phase:
+2. a framework is provided to quickly write functions for pulling multiple keys at once in a two-pass phase:
 
-		1. Phase 1 - split keys into cache-hits and cache-misses.
-		2. Phase 2 - group cache-misses into a single parallel select [ "SELECT WHERE id IN (1...100)" is faster than 100 "SELECT WHERE id = ?" statements ]
+ * Phase 1 - split keys into cache-hits and cache-misses.
+ * Phase 2 - group cache-misses into a single parallel select [ "SELECT WHERE id IN (1...100)" is faster than 100 "SELECT WHERE id = ?" statements ]
 
 
 
@@ -30,8 +30,7 @@ create a regions manager on application startup
 
 attach a new api instance to your request
 
-	# dbSessionReaderFetch is a lazyloaded function to return a database connection.  this way you don't open a database unless you need data
-	request.cachingApi = pyramid_caching_api.api.CachingApi( request , regions_manager=regions_manager , dbSessionReaderFetch=lambda: True )
+	request.cachingApi = pyramid_caching_api.api.CachingApi( request , regions_manager=regions_manager , dbSessionReader=dbSession )
 
 ask it to get the useraccount from mapping
 

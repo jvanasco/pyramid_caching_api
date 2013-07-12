@@ -73,56 +73,36 @@ class CachingApi(object):
     
     A single instance of CachingApi() is recommended to be attached to the `request` object
 
-    the `dbSessionReaderFetch` and `dbSessionWriterFetch` attributes should be callables that return a dbSession connection.
-
-    the `dbSessionReader` and `dbSessionWriter` attributes are memoized properties that cache a dbSession connection when first called.
     """
     DEBUG_CACHING_API = False
     cached = None
-    _dbSessionReader = None
-    _dbSessionWriter = None
-    dbSessionReaderFetch = None
-    dbSessionWriterFetch = None
+    dbSessionReader = None
+    dbSessionWriter = None
     dbPreference = None
     request = None
     regions_manager = None
     
 
-    @property
-    def dbSessionReader(self):
-        """returns a memoizied _dbSessionReader"""
-        if self._dbSessionReader is None and self.dbSessionReaderFetch is not None:
-            self._dbSessionReader = self.dbSessionReaderFetch()
-        return self._dbSessionReader
 
-
-    @property
-    def dbSessionWriter(self):
-        """returns a memoizied _dbSessionWriter"""
-        if self._dbSessionWriter is None and self.dbSessionWriterFetch is not None:
-            self._dbSessionWriter = self.dbSessionWriterFetch()
-        return self._dbSessionWriter
-
-
-    def __init__( self , request , dbSessionReaderFetch=None , dbSessionWriterFetch=None , dbPreference=None , regions_manager=None ):
+    def __init__( self , request , dbSessionReader=None , dbSessionWriter=None , dbPreference=None , regions_manager=None ):
         """ __init__ 
         
             Params
             ------
             `request`
                 pryramid request object
-            `dbSessionReaderFetch`
-                callable action that returns a `dbSessionReader`
+            `dbSessionReader`
+                connection to reader (slave)
             `dbSessionWriterFetch`
-                callable action that returns a `dbSessionWriterFetch`
+                connection to writer (master)
             `dbPreference`
                 do we prefer the writer to the reader ?
             `regions_manager`
                 cache regions config 
         """
         self.request = request
-        self.dbSessionReaderFetch = dbSessionReaderFetch
-        self.dbSessionWriterFetch = dbSessionWriterFetch
+        self.dbSessionReader = dbSessionReader
+        self.dbSessionWriter = dbSessionWriter
         self.dbPreference = dbPreference
         self.regions_manager = regions_manager
         
@@ -143,20 +123,12 @@ class CachingApi(object):
             return
         apiObject.request = self.request
         apiObject.regions_manager = self.regions_manager
-        if self.dbSessionWriterFetch and self.dbSessionReaderFetch :
-            if   self.dbPreference == 'writer':
-                apiObject.dbSession = self.dbSessionWriter
-            elif self.dbPreference == 'reader':
-                apiObject.dbSession = self.dbSessionReader
-            else:
-                apiObject.dbSession = self.dbSessionReader
-        else :
-            if self.dbSessionWriter :
-                apiObject.dbSession = self.dbSessionWriter
-            elif self.dbSessionReader :
-                apiObject.dbSession = self.dbSessionReader
-            else:
-                raise ValueError("must have a dbSession")
+        if self.dbSessionWriter :
+            apiObject.dbSession = self.dbSessionWriter
+        elif self.dbSessionReader :
+            apiObject.dbSession = self.dbSessionReader
+        else:
+            raise ValueError("must have a dbSession")
 
 
 

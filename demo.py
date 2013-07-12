@@ -113,8 +113,8 @@ regions_manager = pyramid_caching_api.api.CachingManager( pyramid_config , pyram
 
 ## this would happen on every request
 r = FakeRequest()
-r.cachingApi = pyramid_caching_api.api.CachingApi( r , regions_manager=regions_manager , dbSessionReaderFetch=lambda: True )
-
+dbSession = None
+r.cachingApi = pyramid_caching_api.api.CachingApi( r , regions_manager=regions_manager , dbSessionReader=dbSession )
 
 if True :
     # some sample gets
@@ -144,5 +144,4 @@ if True :
     advanced_b = r.cachingApi.get(  AdvancedCachedObject , 'get_by_id' , (2,) )
     print advanced_b
     print advanced_b.original_version
-
 
