@@ -1,2 +1,6 @@
+0.0.2
+	black
+	cleanup
+
 0.0.1
 	initial import
